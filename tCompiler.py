@@ -1,0 +1,113 @@
+import struct
+from tLexer import Lexer
+from tParser import ParseResult, Parser
+from tError import FileNotFound
+import tGlobals
+from tEnum import iota
+from tToken import T_MINUS, T_PLUS, T_SLASH, T_STAR, Token
+
+#Opcodes for virtual machine
+OP_NOP = iota(True) #No-op
+
+OP_NUMBER = iota() #Push a number onto stack
+
+OP_ADD = iota() #Push top two numbers, adds them, and pushes them back
+OP_SUB = iota() #Like add but with subtract
+OP_MUL = iota()
+OP_DIV = iota()
+
+OP_NEG = iota() #Negates top of stack
+OP_PRINT = iota() #Temporary instruction
+
+#COMPILER CLASS - COMPILES AST DOWN TO BYTECODE FOR C VIRTUAL MACHINE
+class Compiler:
+    def __init__(self, path : str):
+        self.ast = None
+        self.data = []
+        self.program = []
+        self.path = path
+        try:
+            with open(path, 'r') as f:
+                self.source = f.read()
+        except FileNotFoundError:
+            print(FileNotFound(f"File '{path}' not found"))
+
+    def lex(self) -> list[Token]:
+        lexer = Lexer(self.path, self.source)
+        tokens = lexer.lex()
+
+        return tokens
+
+    def parse(self, tokens : list[Token]) -> ParseResult:
+        parser = Parser(tokens)
+        return parser.parse()
+
+    def visit(self, node):
+        method_name = f'v{type(node).__name__}'
+        method = getattr(self, method_name, self.no_visit)
+        method(node)
+
+    def no_visit(self, node):
+        assert False, f"No v{type(node).__name__} method defined"
+
+    def vNumberNode(self, node):
+        self.program.append((OP_NUMBER, node.token.value))
+
+    def vBinaryNode(self, node):
+        self.visit(node.left)
+        self.visit(node.right)
+
+        op = node.operator.type
+        if op == T_PLUS:
+            self.program.append((OP_ADD, ))
+        elif op == T_MINUS:
+            self.program.append((OP_SUB, ))
+        elif op == T_STAR:
+            self.program.append((OP_MUL, ))
+        elif op == T_SLASH:
+            self.program.append((OP_DIV, ))
+        else:
+            assert False, "Binary not implemented!"
+
+    def vUnaryNode(self, node):
+        self.visit(node.right)
+
+        op = node.operator.type
+
+        if op == T_MINUS:
+            self.program.append((OP_NEG, ))
+        elif op == T_PLUS:
+            pass
+        else:
+            assert False, "Unary not implemented!"
+
+    def write(self):
+        for command in self.program:
+            self.data.append(command[0])
+            operands = command[1:]
+            operand_bytes = []
+            for operand in operands:
+                operand_bytes = bytearray(struct.pack('f', operand))
+                self.data.extend(bytes(operand_bytes))
+
+        new_path = self.path.split('\\')[-1].split('.')[0] + '.timb'
+
+        with open(new_path, 'wb') as f:
+            print(self.program)
+            print(self.data)
+            f.write(bytes(self.data))
+
+    def compile(self):
+        tokens = self.lex()
+
+        if tGlobals.has_error:
+            return
+
+        self.ast = self.parse(tokens)
+
+        if self.ast.error:
+            print(self.ast.error)
+            return
+
+        self.visit(self.ast.node) #Like visitor method in tree walk interpreter but instead of interpreting and having slow runtime having slower compile time with fast runtime
+        self.write()
