@@ -1,4 +1,4 @@
-from tPosition import Position
+from Utility.tPosition import Position
 
 class Error:
     def __init__(self, err_name : str, description : str, start : Position, end : Position):

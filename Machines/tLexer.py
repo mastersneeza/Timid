@@ -1,8 +1,8 @@
 from string import whitespace, digits
-from tPosition import Position
-from tToken import *
-from tError import InvalidCharacter
-import tGlobals
+from Utility.tPosition import Position
+from Utility.tToken import *
+from Utility.tError import InvalidCharacter
+import Utility.tGlobals as tGlobals
 
 #LEXER CLASS
 class Lexer:
@@ -13,11 +13,15 @@ class Lexer:
 
     @property
     def at_end(self) -> bool:
-        return self.pos.index >= len(self.source)
+        result = self.pos.index >= len(self.source)
+        return result
 
     @property
     def current_char(self) -> str:
-        return self.source[self.pos.index] if not self.at_end else '\0'
+        try:
+            return self.source[self.pos.index]
+        except IndexError:
+            return '\0'
 
     def advance(self) -> str:
         self.pos.advance(self.current_char)
@@ -64,6 +68,12 @@ class Lexer:
                 self.advance()
             elif self.current_char == '/':
                 tokens.append(self.make_token(T_SLASH, self.current_char))
+                self.advance()
+            elif self.current_char == '^':
+                tokens.append(self.make_token(T_CARET, self.current_char))
+                self.advance()
+            elif self.current_char == '%':
+                tokens.append(self.make_token(T_PERCENT, self.current_char))
                 self.advance()
             #Parentheses
             elif self.current_char == '(':

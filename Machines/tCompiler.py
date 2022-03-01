@@ -1,10 +1,10 @@
 import struct
-from tLexer import Lexer
-from tParser import ParseResult, Parser
-from tError import FileNotFound
-import tGlobals
-from tEnum import iota
-from tToken import T_MINUS, T_PLUS, T_SLASH, T_STAR, Token
+from Machines.tLexer import Lexer
+from Machines.tParser import ParseResult, Parser
+from Utility.tError import FileNotFound
+import Utility.tGlobals as tGlobals
+from Utility.tEnum import iota
+from Utility.tToken import *
 
 #Opcodes for virtual machine
 OP_NOP = iota(True) #No-op
@@ -13,11 +13,13 @@ OP_NUMBER = iota() #Push a number onto stack
 
 OP_ADD = iota() #Push top two numbers, adds them, and pushes them back
 OP_SUB = iota() #Like add but with subtract
-OP_MUL = iota()
-OP_DIV = iota()
+OP_MUL = iota() #Multiplication
+OP_DIV = iota() #Division
+OP_POW = iota() #Exponents
+OP_MOD = iota() #Modulus
 
 OP_NEG = iota() #Negates top of stack
-OP_PRINT = iota() #Temporary instruction
+OP_DUMP = iota() #Temporary instruction
 
 #COMPILER CLASS - COMPILES AST DOWN TO BYTECODE FOR C VIRTUAL MACHINE
 class Compiler:
@@ -31,6 +33,7 @@ class Compiler:
                 self.source = f.read()
         except FileNotFoundError:
             print(FileNotFound(f"File '{path}' not found"))
+            tGlobals.has_error = True
 
     def lex(self) -> list[Token]:
         lexer = Lexer(self.path, self.source)
@@ -66,6 +69,10 @@ class Compiler:
             self.program.append((OP_MUL, ))
         elif op == T_SLASH:
             self.program.append((OP_DIV, ))
+        elif op == T_CARET:
+            self.program.append((OP_POW, ))
+        elif op == T_PERCENT:
+            self.program.append((OP_MOD, ))
         else:
             assert False, "Binary not implemented!"
 
@@ -90,11 +97,13 @@ class Compiler:
                 operand_bytes = bytearray(struct.pack('f', operand))
                 self.data.extend(bytes(operand_bytes))
 
+        self.data.append(OP_DUMP)
+
         new_path = self.path.split('\\')[-1].split('.')[0] + '.timb'
 
         with open(new_path, 'wb') as f:
-            print(self.program)
-            print(self.data)
+            #print(self.program)
+            #print(self.data)
             f.write(bytes(self.data))
 
     def compile(self):

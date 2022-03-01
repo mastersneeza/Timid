@@ -1,5 +1,5 @@
-from tEnum import iota
-from tPosition import Position
+from Utility.tEnum import iota
+from Utility.tPosition import Position
 
 #TOKEN TYPES
 #T stands for Token Type
@@ -9,6 +9,8 @@ T_PLUS = iota() #+
 T_MINUS = iota() #-
 T_STAR = iota() #*
 T_SLASH = iota() #/
+T_CARET = iota() #^
+T_PERCENT = iota() #%
 
 T_LPAR = iota() #(
 T_RPAR = iota() #)

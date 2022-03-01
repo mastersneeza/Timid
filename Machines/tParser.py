@@ -1,6 +1,6 @@
-from tToken import *
-from tError import InvalidSyntax
-import tGlobals
+from Utility.tToken import *
+from Utility.tError import InvalidSyntax
+import Utility.tGlobals as tGlobals
 
 #Most code taken from https://github.com/davidcallanan/py-myopl-code with some modifications
 
@@ -102,13 +102,13 @@ class Parser:
     def expr(self):
         return self.sum()
 
-    def sum(self):
+    def sum(self): #Addition and subtraction
         return self.binop(self.term, (T_PLUS, T_MINUS))
 
-    def term(self):
-        return self.binop(self.unary, (T_STAR, T_SLASH))
+    def term(self): #Multiplication, division and modulus
+        return self.binop(self.unary, (T_STAR, T_SLASH, T_PERCENT))
 
-    def unary(self):
+    def unary(self): #Negation
         res = ParseResult()
         operator = self.current_tok
 
@@ -118,9 +118,12 @@ class Parser:
             if res.error: return res
             return res.success(UnaryNode(operator, factor))
 
-        return self.atom()
+        return self.power()
 
-    def atom(self):
+    def power(self): #Exponents
+        return self.binop(self.atom, (T_CARET, ), self.unary)
+
+    def atom(self): #Literals and grouping
         res = ParseResult()
         token = self.current_tok
 
