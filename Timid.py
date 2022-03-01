@@ -1,5 +1,6 @@
 import sys
 import subprocess
+import pathlib
 import Utility.tGlobals as tGlobals
 from Machines.tCompiler import Compiler
 
@@ -17,9 +18,12 @@ class Timid:
         filenames = sys.argv[1:] #Ignore first argument
 
         for filename in filenames:
-            Timid.run(filename)
-            new_path = filename.split('\\')[-1].split('.')[0] + '.timb'
-            subprocess.run([".\\TimidRuntime.exe", new_path])
+            path = pathlib.Path(filename)
+            binary_path = path.parents[0] / (path.stem + '.timb')
+            Timid.run(path)
+            if tGlobals.has_error:
+                continue
+            subprocess.run([".\\TimidRuntime.exe", binary_path])
             tGlobals.has_error = False #Reset error flag
 
     @staticmethod

@@ -5,6 +5,7 @@ from Utility.tError import FileNotFound
 import Utility.tGlobals as tGlobals
 from Utility.tEnum import iota
 from Utility.tToken import *
+import pathlib
 
 #Opcodes for virtual machine
 OP_NOP = iota(True) #No-op
@@ -23,15 +24,16 @@ OP_DUMP = iota() #Temporary instruction
 
 #COMPILER CLASS - COMPILES AST DOWN TO BYTECODE FOR C VIRTUAL MACHINE
 class Compiler:
-    def __init__(self, path : str):
+    def __init__(self, path : pathlib.Path):
         self.ast = None
         self.data = []
         self.program = []
         self.path = path
-        try:
-            with open(path, 'r') as f:
+
+        if self.path.exists():
+            with self.path.open('r') as f:
                 self.source = f.read()
-        except FileNotFoundError:
+        else:
             print(FileNotFound(f"File '{path}' not found"))
             tGlobals.has_error = True
 
@@ -45,6 +47,7 @@ class Compiler:
         parser = Parser(tokens)
         return parser.parse()
 
+    #Visitor methods
     def visit(self, node):
         method_name = f'v{type(node).__name__}'
         method = getattr(self, method_name, self.no_visit)
@@ -99,11 +102,9 @@ class Compiler:
 
         self.data.append(OP_DUMP)
 
-        new_path = self.path.split('\\')[-1].split('.')[0] + '.timb'
+        binary_path = self.path.parents[0] / (self.path.stem + '.timb')
 
-        with open(new_path, 'wb') as f:
-            #print(self.program)
-            #print(self.data)
+        with pathlib.Path(binary_path).open('wb') as f:
             f.write(bytes(self.data))
 
     def compile(self):
