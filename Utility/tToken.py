@@ -4,6 +4,10 @@ from Utility.tPosition import Position
 #TOKEN TYPES
 #T stands for Token Type
 T_NUMBER = iota(True)
+T_IDENTIFIER = iota()
+T_TRUE = iota()
+T_FALSE = iota()
+T_NULL = iota()
 
 T_PLUS = iota() #+
 T_MINUS = iota() #-
@@ -11,6 +15,15 @@ T_STAR = iota() #*
 T_SLASH = iota() #/
 T_CARET = iota() #^
 T_PERCENT = iota() #%
+
+T_EQ = iota() #=
+T_EE = iota() #==
+T_LT = iota() #<
+T_LTE = iota() #<=
+T_GT = iota() #>
+T_GTE = iota() #>=
+T_NOT = iota() #!
+T_NE = iota() #!=
 
 T_LPAR = iota() #(
 T_RPAR = iota() #)

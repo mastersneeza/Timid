@@ -5,8 +5,10 @@ it might do other things like Python or it might not...
 but first thing will be maths because maths is annoying to manually do.
 
 ## Features
-Timid can currently compile your simple maths expression (such as ```1 + 2 * 3```)
-down into a custom bytecode for an interpreter written in C.
+Timid is currently a general expression evaluator.
+Timid supports numbers, booleans and null values.
+It is able to do simple arithmetic, comparisons, equality, and more.
+Timid compiles your expression down into a custom bytecode for an interpreter written in C, called TimidRuntime.
 Timid currently only supports addition, subtraction, multiplication, division, exponents, modulus, grouping and numbers (+, -, *, /, ^, %)
 
 ## Syntax
@@ -16,11 +18,10 @@ That is, it follows order of operations.
 ```(1 2 + 5 /``` is not
 
 ## Instructions
-Just run ```> py Timid.py [filename]``` in the Terminal / Command line and it will compile
-and run your script, displaying the output in the terminal.
+Windows users: run ```> py Timid.py``` in the terminal to get started
+UNIX users: have GCC preinstalled, then go to the base directory and run ```$ gcc tVirtualMachine\*.c -o TimidRuntime```, then you can run ```$ py Timid.py``` from the base directory
 Currently, Timid automatically prints the result, and only supports expressions, not full statements.
 
-## Example
-The program, ```(1 + 2) - 3 * 4 / 5 ^ 6 % 7```, stored in file ```example.timid```
-will output ```> 2.77722``` when run with ```> py Timid.py example.timid```.
-Try do other random programs or things. Try break TImid because its so bloody bad
+## Examples
+Go to the ```Timid\Examples``` directory and run the programs in there and try to mess around.
+Try do other random programs or things. Try break Timid because its so bloody bad

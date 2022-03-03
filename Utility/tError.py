@@ -9,7 +9,7 @@ class Error:
 
     def __str__(self):
         error = f"{self.err_name} Error: {self.description}"
-        error += f"\n\tFile {self.start.filename} @ ({self.start.line + 1}, {self.start.column + 1})"
+        error += f"\n\tFile '{self.start.filename}' @ ({self.start.line + 1}, {self.start.column + 1})"
         return error
 
 class InvalidCharacter(Error):

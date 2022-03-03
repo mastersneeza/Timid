@@ -18,6 +18,22 @@ class NumberNode(Node): #Number literals
     def __repr__(self):
         return f"{self.token.value}"
 
+class BoolNode(Node): #Boolean literals
+    def __init__(self, token : Token):
+        self.token = token
+        super().__init__(token.start, token.end)
+
+    def __repr__(self):
+        return f"{self.token.value}"
+
+class NullNode(Node): #Null literal
+    def __init__(self, token : Token):
+        self.token = token
+        super().__init__(token.start, token.end)
+
+    def __repr__(self):
+        return f"null"
+
 class BinaryNode(Node): #Binary operations like addition, subtraction, etc
     def __init__(self, left : Node, operator : Token, right : Node):
         self.left = left
@@ -92,7 +108,7 @@ class Parser:
         self.advance()
 
     def parse(self):
-        res = self.sum()
+        res = self.expr()
 
         if not res.error and self.current_tok.type != T_EOF:
             return res.failure(InvalidSyntax("Expected a statement or expression", self.current_tok.start, self.current_tok.end))
@@ -100,7 +116,13 @@ class Parser:
         return res
 
     def expr(self):
-        return self.sum()
+        return self.equality()
+
+    def equality(self): #Equality testing
+        return self.binop(self.comparison, (T_EE, T_NE))
+
+    def comparison(self): #Comparisons
+        return self.binop(self.sum, (T_LT, T_LTE, T_GT, T_GTE))
 
     def sum(self): #Addition and subtraction
         return self.binop(self.term, (T_PLUS, T_MINUS))
@@ -112,7 +134,7 @@ class Parser:
         res = ParseResult()
         operator = self.current_tok
 
-        if operator.type in (T_PLUS, T_MINUS):
+        if operator.type in (T_PLUS, T_MINUS, T_NOT):
             self.advance_reg(res)
             factor = res.register(self.unary())
             if res.error: return res
@@ -130,6 +152,12 @@ class Parser:
         if token.type == T_NUMBER:
             self.advance_reg(res)
             return res.success(NumberNode(token))
+        elif token.type in (T_TRUE, T_FALSE):
+            self.advance_reg(res)
+            return res.success(BoolNode(token))
+        elif token.type == T_NULL:
+            self.advance_reg(res)
+            return res.success(NullNode(token))
         elif token.type == T_LPAR:
             self.advance_reg(res)
             expression = res.register(self.expr())

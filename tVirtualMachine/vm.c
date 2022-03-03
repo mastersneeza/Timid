@@ -5,7 +5,11 @@
 #include "math.h"
 #include "chunk.h"
 
-void resetStack() {
+void push(Value value);
+Value pop();
+static Value peek(int distance);
+
+static void resetStack() {
     vm.stackCount = 0;
 }
 
@@ -16,7 +20,8 @@ void initVm() {
 }
 
 void freeVm() {
-
+    FREE_ARRAY(Value, vm.stack, vm.stackCount);
+    initVm();
 }
 
 Value pop() {
@@ -33,6 +38,14 @@ void push(Value value) {
 
     vm.stack[vm.stackCount] = value;
     vm.stackCount++;
+}
+
+static Value peek(int distance) {
+    return vm.stack[vm.stackCount - distance - 1];
+}
+
+static bool truth(Value value) {
+    return IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
 InterpretResult run() {
@@ -64,44 +77,123 @@ InterpretResult run() {
                 push(constant);
                 break;
             }
+            case OP_TRUE: push(BOOL_VAL(true)); break;
+            case OP_FALSE: push(BOOL_VAL(false)); break;
+            case OP_NULL: push(NULL_VAL); break;
             case OP_ADD: {
+                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                    printf("Incompatible types on instruction %d\n", instruction);
+                    resetStack();
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 Value a = pop();
                 Value b = pop();
-                push(a + b);
+                push(NUMBER_VAL(AS_NUMBER(a) + AS_NUMBER(b)));
                 break;
             }
             case OP_SUB: {
+                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                    printf("Incompatible types on instruction %d\n", instruction);
+                    resetStack();
+
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 Value a = pop();
                 Value b = pop();
-                push(b - a);
+                push(NUMBER_VAL(AS_NUMBER(b) - AS_NUMBER(a)));
                 break;
             }
             case OP_MUL: {
+                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                    printf("Incompatible types on instruction %d\n", instruction);
+                    resetStack();
+
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 Value a = pop();
                 Value b = pop();
-                push(a * b);
+                push(NUMBER_VAL(AS_NUMBER(a) * AS_NUMBER(b)));
                 break;
             }
             case OP_DIV: {
+                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                    printf("Incompatible types on instruction %d\n", instruction);
+                    resetStack();
+
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 Value a = pop();
                 Value b = pop();
-                push(b / a);
+                push(NUMBER_VAL(AS_NUMBER(b) / AS_NUMBER(a)));
                 break;
             }
             case OP_POW: {
+                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                    printf("Incompatible types on instruction %d\n", instruction);
+                    resetStack();
+
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 Value a = pop();
                 Value b = pop();
-                push(pow(b, a));
+                push(NUMBER_VAL(pow(AS_NUMBER(b), AS_NUMBER(a))));
                 break;
             }
             case OP_MOD: {
+                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                    printf("Incompatible types on instruction %d\n", instruction);
+                    resetStack();
+
+                    return INTERPRET_RUNTIME_ERROR;
+                }
                 Value a = pop();
                 Value b = pop();
-                push(fmod(b, a));
+                push(NUMBER_VAL(fmod(AS_NUMBER(b), AS_NUMBER(a))));
+                break;
+            }
+            case OP_EQ: {
+                Value a = pop();
+                Value b = pop();
+                push(BOOL_VAL(equals(a, b)));
+                break;
+            }
+            case OP_LT: {
+                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                    printf("Incompatible types on instruction %d\n", instruction);
+                    resetStack();
+
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                Value a = pop();
+                Value b = pop();
+
+                push(BOOL_VAL(AS_NUMBER(b) < AS_NUMBER(a)));
+                break;
+            }
+            case OP_GT: {
+                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                    printf("Incompatible types on instruction %d\n", instruction);
+                    resetStack();
+
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                Value a = pop();
+                Value b = pop();
+
+                push(BOOL_VAL(AS_NUMBER(b) > AS_NUMBER(a)));
                 break;
             }
             case OP_NEG:
-                push(-pop()); //Negate top value of stack
+                if (!IS_NUMBER(peek(0))) {
+                    printf("Incompatible types on instruction %d\n", instruction);
+                    resetStack();
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                //printf("%d\n", peek(0).type);
+                push(NUMBER_VAL(-AS_NUMBER(pop()))); //Negate top value of stack
+                break;
+            case OP_NOT:
+                push(BOOL_VAL(truth(pop())));
                 break;
             case OP_DUMP:
                 printValue(pop()); //Pops top value and prints it, acts as a temporary end-of-program
@@ -115,12 +207,16 @@ InterpretResult run() {
     #undef READ_CONSTANT_LONG
 }
 
+void emitByte(uint8_t byte, int index) {
+    writeChunk(vm.chunk, byte, index);
+}
+
 void readBytecode(uint8_t* bytecode, size_t length) {
     for (int i = 0; i < length; i++) {
         uint8_t instruction = bytecode[i];
         switch (instruction) {
             case 0:
-                writeChunk(vm.chunk, OP_NOP, i);
+                emitByte(OP_NOP, i);
                 break;
             case 1: {
                 union {
@@ -132,34 +228,55 @@ void readBytecode(uint8_t* bytecode, size_t length) {
                     u.bytes[j - 1] = bytecode[i + j];
                 }
 
-                writeConstant(vm.chunk, u.f, i); //Add value to constant pool
+                writeConstant(vm.chunk, NUMBER_VAL(u.f), i); //Add value to constant pool
 
                 i += 4; //Skip past float values otherwise garbage values will be used
                 break;
             }
             case 2:
-                writeChunk(vm.chunk, OP_ADD, i);
+                emitByte(OP_TRUE, i);
                 break;
             case 3:
-                writeChunk(vm.chunk, OP_SUB, i);
+                emitByte(OP_FALSE, i);
                 break;
             case 4:
-                writeChunk(vm.chunk, OP_MUL, i);
+                emitByte(OP_NULL, i);
                 break;
             case 5:
-                writeChunk(vm.chunk, OP_DIV, i);
+                emitByte(OP_ADD, i);
                 break;
             case 6:
-                writeChunk(vm.chunk, OP_POW, i);
+                emitByte(OP_SUB, i);
                 break;
             case 7:
-                writeChunk(vm.chunk, OP_MOD, i);
+                emitByte(OP_MUL, i);
                 break;
             case 8:
-                writeChunk(vm.chunk, OP_NEG, i);
+                emitByte(OP_DIV, i);
                 break;
             case 9:
-                writeChunk(vm.chunk, OP_DUMP, i);
+                emitByte(OP_POW, i);
+                break;
+            case 10:
+                emitByte(OP_MOD, i);
+                break;
+            case 11:
+                emitByte(OP_EQ, i);
+                break;
+            case 12:
+                emitByte(OP_LT, i);
+                break;
+            case 13:
+                emitByte(OP_GT, i);
+                break;
+            case 14:
+                emitByte(OP_NEG, i);
+                break;
+            case 15:
+                emitByte(OP_NOT, i);
+                break;
+            case 16:
+                emitByte(OP_DUMP, i);
                 break;
             default:
                 printf("Unkown opcode %d\n", instruction);

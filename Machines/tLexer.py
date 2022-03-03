@@ -1,4 +1,4 @@
-from string import whitespace, digits
+from string import ascii_letters, whitespace, digits
 from Utility.tPosition import Position
 from Utility.tToken import *
 from Utility.tError import InvalidCharacter
@@ -47,6 +47,37 @@ class Lexer:
 
         return Token(T_NUMBER, float(num_str), start, self.pos)
 
+    def two_char_token(self, one_char_token, double_char_token, match):
+        tt = one_char_token
+        start = self.pos.copy()
+        value = self.current_char
+
+        self.advance()
+
+        if self.current_char == match:
+            value += self.current_char
+            tt = double_char_token
+            self.advance()
+
+        return Token(tt, value, start, self.pos)
+
+    def identifier(self):
+        id_str = ''
+        pos_start = self.pos.copy()
+
+        keywords = {
+            'true': T_TRUE,
+            'false': T_FALSE,
+            'null': T_NULL,
+        }
+
+        while self.current_char != None and self.current_char in ascii_letters + digits + '_':
+            id_str += self.current_char
+            self.advance()
+
+        tok_type = keywords.get(id_str, T_IDENTIFIER)
+        return Token(tok_type, id_str, pos_start, self.pos)
+
     def lex(self) -> list:
         tokens = []
         while not self.at_end:
@@ -56,6 +87,9 @@ class Lexer:
             #Literals
             elif self.current_char in digits:
                 tokens.append(self.number())
+            #Identifiers and keywords
+            elif self.current_char in ascii_letters + '_':
+                tokens.append(self.identifier())
             #Operators
             elif self.current_char == '+':
                 tokens.append(self.make_token(T_PLUS, self.current_char))
@@ -75,6 +109,14 @@ class Lexer:
             elif self.current_char == '%':
                 tokens.append(self.make_token(T_PERCENT, self.current_char))
                 self.advance()
+            elif self.current_char == '=':
+                tokens.append(self.two_char_token(T_EQ, T_EE, '='))
+            elif self.current_char == '<':
+                tokens.append(self.two_char_token(T_LT, T_LTE, '='))
+            elif self.current_char == '>':
+                tokens.append(self.two_char_token(T_GT, T_GTE, '='))
+            elif self.current_char == '!':
+                tokens.append(self.two_char_token(T_NOT, T_NE, '='))
             #Parentheses
             elif self.current_char == '(':
                 tokens.append(self.make_token(T_LPAR, self.current_char))
