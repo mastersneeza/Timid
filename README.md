@@ -15,10 +15,13 @@ Timid compiles your expression down into a custom bytecode for an interpreter wr
 Timid's syntax currently follows C's order of operations for expressions.<br/>
 
 ## Instructions
-Windows users: run ```> py Timid.py``` in the terminal to get started.<br/>
-UNIX users: have GCC preinstalled, then go to the base directory and run ```$ gcc tVirtualMachine\*.c -o TimidRuntime```, then you can run ```$ py Timid.py``` from the base directory.<br/>
+Windows users: set ```<Timid Install Location>\Timid``` as your working directory<br\>
+then run ```<Timid Install Location>\Timid> py Timid.py``` in the terminal to get started.<br/>
+UNIX users: have GCC preinstalled, then run ```$ gcc ~/Timid/tVirtual*.c -o ~/Timid/TimidRuntime```.<br\>
+Then, run  ```$ python ~/Timid/Timid.py``` to get started<br/>
 Currently, Timid automatically prints the result, and only supports expressions, not full statements.<br/>
 
 ## Examples
-Go to the ```Timid\Examples``` directory and run the programs in there and try to mess around.<br/>
+Go to the ```~Timid/Examples``` directory and run the programs in there and try to mess around.<br/>
+For example, after setup, try ```> python ~\Timid\Timid.py ~\Timid\Examples\example.timid``` on Windows or ```$ python ~/Timid/Timid.py ~/Timid/Examples/example.timid``` on UNIX systems<br/>
 Try do other random programs or things. Try break Timid because its so bloody bad.<br/>

@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "math.h"
 #include "chunk.h"
+#include "common.h"
 
 void push(Value value);
 Value pop();
@@ -54,16 +55,16 @@ InterpretResult run() {
     #define READ_CONSTANT_LONG() (vm.chunk->constants.values[READ_BYTE() | (READ_BYTE() << 8) | (READ_BYTE() << 16)])
 
     for (;;) {
-        #ifdef DEBUG_TRACE_EXECUTION
-        printf("          ");
-        for (Value* slot = vm.stack; slot < vm.stack + vm.stackCount; slot++) {
-            printf("[ ");
-            printValue(*slot);
-            printf(" ]");
+        if (devMode) {
+            printf("          ");
+            for (Value* slot = vm.stack; slot < vm.stack + vm.stackCount; slot++) {
+                printf("[ ");
+                printValue(*slot);
+                printf(" ]");
+            }
+            printf("\n");
+            disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
         }
-        printf("\n");
-        disassembleInstruction(vm.chunk, (int)(vm.ip - vm.chunk->code));
-        #endif
 
         uint8_t instruction;
         switch (instruction = READ_BYTE()) {
@@ -81,7 +82,7 @@ InterpretResult run() {
             case OP_FALSE: push(BOOL_VAL(false)); break;
             case OP_NULL: push(NULL_VAL); break;
             case OP_ADD: {
-                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                if ((!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)))) {
                     printf("Incompatible types on instruction %d\n", instruction);
                     resetStack();
                     return INTERPRET_RUNTIME_ERROR;
@@ -92,7 +93,7 @@ InterpretResult run() {
                 break;
             }
             case OP_SUB: {
-                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                if ((!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)))) {
                     printf("Incompatible types on instruction %d\n", instruction);
                     resetStack();
 
@@ -104,7 +105,7 @@ InterpretResult run() {
                 break;
             }
             case OP_MUL: {
-                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                if ((!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)))) {
                     printf("Incompatible types on instruction %d\n", instruction);
                     resetStack();
 
@@ -116,7 +117,7 @@ InterpretResult run() {
                 break;
             }
             case OP_DIV: {
-                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                if ((!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)))) {
                     printf("Incompatible types on instruction %d\n", instruction);
                     resetStack();
 
@@ -128,7 +129,7 @@ InterpretResult run() {
                 break;
             }
             case OP_POW: {
-                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                if ((!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)))) {
                     printf("Incompatible types on instruction %d\n", instruction);
                     resetStack();
 
@@ -140,7 +141,7 @@ InterpretResult run() {
                 break;
             }
             case OP_MOD: {
-                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                if ((!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)))) {
                     printf("Incompatible types on instruction %d\n", instruction);
                     resetStack();
 
@@ -158,7 +159,7 @@ InterpretResult run() {
                 break;
             }
             case OP_LT: {
-                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                if ((!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)))) {
                     printf("Incompatible types on instruction %d\n", instruction);
                     resetStack();
 
@@ -171,7 +172,7 @@ InterpretResult run() {
                 break;
             }
             case OP_GT: {
-                if (!(IS_NUMBER(peek(0)) || IS_NUMBER(peek(1)))) {
+                if ((!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1)))) {
                     printf("Incompatible types on instruction %d\n", instruction);
                     resetStack();
 

@@ -5,6 +5,7 @@
 #include "unistd.h"
 #include "common.h"
 #include "getopt.h"
+#include "time.h"
 
 static bool hasError = false;
 static char* version = "1";
@@ -67,7 +68,10 @@ void runFile(const char* path) {
         return;
     }
 
+    float startTime = clock();
     InterpretResult result = interpret(bytecode, sizeOfFile(file));
+    if (devMode)
+        printf("Execution of file %s completed in %f seconds", path, clock() - startTime);
     if (result == INTERPRET_RUNTIME_ERROR) {
         hasError = true;
     }
@@ -100,7 +104,7 @@ int main(int argc, char* const argv[]) {
     while ((option = getopt_long(argc, argv, "dhv", longopts, NULL)) != -1) {
         switch (option) {
             case 'd':
-                #define DEBUG_TRACE_EXECUTION
+                devMode = true;
                 break;
             case 'h':
                 printUsage();
