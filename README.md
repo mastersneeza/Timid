@@ -15,9 +15,9 @@ Timid compiles your expression down into a custom bytecode for an interpreter wr
 Timid's syntax currently follows C's order of operations for expressions.<br/>
 
 ## Instructions
-Windows users: set ```<Timid Install Location>\Timid``` as your working directory<br\>
+Windows users: set ```<Timid Install Location>\Timid``` as your working directory<br/>
 then run ```<Timid Install Location>\Timid> py Timid.py``` in the terminal to get started.<br/>
-UNIX users: have GCC preinstalled, then run ```$ gcc ~/Timid/tVirtual*.c -o ~/Timid/TimidRuntime```.<br\>
+UNIX users: have GCC preinstalled, then run ```$ gcc ~/Timid/tVirtual*.c -o ~/Timid/TimidRuntime```.<br/>
 Then, run  ```$ python ~/Timid/Timid.py``` to get started<br/>
 Currently, Timid automatically prints the result, and only supports expressions, not full statements.<br/>
 
